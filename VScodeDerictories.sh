@@ -10,7 +10,7 @@ university_poll () {
 
     case $action in 
 
-    1* ) echo "Algorithm";;
+    1* ) university_algorithm_open;;
     2* ) echo "Android";;
     3* ) echo "Testing";;
     4* ) main_poll;;
@@ -67,4 +67,4 @@ main_poll() {
     esac
 }
 
-google-chrome --app https://www.twitch.tv/modestal
+main_poll
