@@ -28,11 +28,33 @@ done
 
 read category
 
-for i in "${sorted_unique_ids[@]}"; do
-    if [ "${i//\"/}" = "$category" ]; then
+returnNameFromCategory() {
+    local category=$1
+    shift
+    local arr=("$@")
 
-        mapfile -t lines2 <<<$(jq -r '.[] | select(.category=="School") | .name' <<<$IP)
-        echo $lines2
+    local flag=1
+    for i in "${sorted_unique_ids[@]}"; do
+        if [ "${i//\"/}" = "$category" ]; then
 
-    fi
+            mapfile -t lines2 <<<$(jq -r '.[] | select(.category=="'${category}'") | .name' <<<$IP)
+            echo $lines2
+            flag=0
+        fi
+    done
+
+    return $flag
+}
+
+returnNameFromCategory $category "${sorted_unique_ids[@]}"
+
+categoryFlag=$?
+
+while [[ $categoryFlag -eq 1 ]]; do
+    echo -n "Enter correct name of category: "
+    read category
+
+    returnNameFromCategory $category "${sorted_unique_ids[@]}"
+
+    categoryFlag=$?
 done
