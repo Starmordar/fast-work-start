@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source "./helper/_helper.sh"
+source "./helper/_constant.sh"
 
 echo -n "Username for 'http://example.com/': "
 read username
@@ -17,7 +18,8 @@ IP=$(
         localhost:4000/getWorkspacesCurl
 )
 
-if [ "$IP" = "Error password" ] || [ "$IP" = "User with this username doesn't exists" ]; then
+if [ "$IP" = "$ERROR_CANNOT_MATCH_PASSWORD" ] ||
+    [ "$IP" = "$ERROR_CANNOT_FINT_USER_BY_USERNAME" ]; then
     echo $IP
     exit
 fi
@@ -30,7 +32,7 @@ for i in "${uniquesCategories[@]}"; do
     echo "${i//\"/}"
 done
 
-echo -n "Input on of the available workspaces: "
+echo -n "Input one of the available workspaces: "
 read category
 
 getWorkspacesNameBelongingToThisCategory $category "${uniquesCategories[@]}"
