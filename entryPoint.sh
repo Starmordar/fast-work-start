@@ -15,30 +15,30 @@ IP=$(
         localhost:4000/getWorkspacesCurl
 )
 
-mapfile -t lines <<<$(jq '.[].category' <<<$IP)
+mapfile -t categoriesString <<<$(jq '.[].category' <<<$IP)
 
-IFS=' ' read -ra my_array <<<"$lines"
+IFS=' ' read -ra categoriesArray <<<"$categoriesString"
 
-sorted_unique_ids=($(echo "${lines[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+uniquesCategories=($(echo "${categoriesString[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
 
-echo "Input on of the available workspaces: "
-for i in "${sorted_unique_ids[@]}"; do
+for i in "${uniquesCategories[@]}"; do
     echo "${i//\"/}"
 done
 
+echo -n "Input on of the available workspaces: "
 read category
 
-returnNameFromCategory() {
+getWorkspacesNameBelongingToThisCategory() {
     local category=$1
     shift
-    local arr=("$@")
+    local categories=("$@")
 
     local flag=1
-    for i in "${sorted_unique_ids[@]}"; do
+    for i in "${categories[@]}"; do
         if [ "${i//\"/}" = "$category" ]; then
-
-            mapfile -t lines2 <<<$(jq -r '.[] | select(.category=="'${category}'") | .name' <<<$IP)
-
+            mapfile -t names <<<$(jq -r '.[] | \
+                    select(.category=="'${category}'") | \
+                    .name' <<<$IP)
             flag=0
         fi
     done
@@ -46,7 +46,7 @@ returnNameFromCategory() {
     return $flag
 }
 
-returnNameFromCategory $category "${sorted_unique_ids[@]}"
+getWorkspacesNameBelongingToThisCategory $category "${uniquesCategories[@]}"
 
 categoryFlag=$?
 
@@ -54,24 +54,24 @@ while [[ $categoryFlag -eq 1 ]]; do
     echo -n "Enter correct name of category: "
     read category
 
-    returnNameFromCategory $category "${sorted_unique_ids[@]}"
+    getWorkspacesNameBelongingToThisCategory $category "${uniquesCategories[@]}"
 
     categoryFlag=$?
 done
 
-prepareWorkspaceToOpenOnUserSystem() {
+getWorkspaceTechnologiesWithParticularName() {
     local name=$1
     shift
     local category=$1
     shift
-    local arr=("$@")
+    local names=("$@")
 
     local flag=1
-    for i in "${my_array[@]}"; do
+    for i in "${names[@]}"; do
         if [ "${i//\"/}" = "$name" ]; then
-
-            mapfile -t lines3 <<<$(jq -r '.[] | select((.category=="'${category}'") and .name=="'${name}'") | .technologies' <<<$IP)
-
+            mapfile -t technologies <<<$(jq -r '.[] | \
+                    select((.category=="'${category}'") and .name=="'${name}'") | \
+                    .technologies' <<<$IP)
             flag=0
         fi
     done
@@ -79,16 +79,16 @@ prepareWorkspaceToOpenOnUserSystem() {
     return $flag
 }
 
-IFS=' ' read -ra my_array <<<"$lines2"
+IFS=' ' read -ra technologiesArray <<<"$names"
 
 echo "Input name of the available workspaces: "
-for i in "${my_array[@]}"; do
+for i in "${technologiesArray[@]}"; do
     echo "${i//\"/}"
 done
 
 read name
 
-prepareWorkspaceToOpenOnUserSystem $name $category "${lines2[@]}"
+getWorkspaceTechnologiesWithParticularName $name $category "${names[@]}"
 
 nameFlag=$?
 
@@ -96,9 +96,9 @@ while [[ $nameFlag -eq 1 ]]; do
     echo -n "Enter correct name of workspace: "
     read name
 
-    prepareWorkspaceToOpenOnUserSystem $name "${my_array[@]}"
+    getWorkspaceTechnologiesWithParticularName $name $category "${technologiesArray[@]}"
 
     nameFlag=$?
 done
 
-echo $lines3
+echo $technologies
